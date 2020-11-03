@@ -29,14 +29,49 @@ describe("deploy chainmonsters rewards contract", () => {
     expect(deployResult.errorMessage).toBe("");
   });
   test("deploy ChainmonstersRewards contract", async () => {
-    const cmHolder = await getAccountAddress("cm-holder");
+    const admin = await getAccountAddress("admin");
     const NonFungibleToken = await getContractAddress("NonFungibleToken");
     const deployResult = await deployContractByName({
-      to: cmHolder,
+      to: admin,
       name: "ChainmonstersRewards",
       addressMap: { NonFungibleToken },
     });
 
     expect(deployResult.errorMessage).toBe("");
+  });
+
+  test("setup basic reward", async () => {
+    const admin = await getAccountAddress("admin");
+
+    const ChainmonstersRewards = await getContractAddress(
+      "ChainmonstersRewards"
+    );
+
+    const code = await getTransactionCode({
+      name: "/admin/create_reward",
+      addressMap: { ChainmonstersRewards },
+    });
+
+    const args = [
+      ["Alpha Access", types.String],
+      [100, types.UInt32],
+    ];
+
+    const signers = [admin];
+
+    let txResult;
+    try {
+      txResult = await sendTransaction({
+        code,
+        args,
+        signers,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
+    console.log({ txResult });
+    expect(txResult.errorMessage).toBe("");
+    expect(txResult.events.length).toBe(1);
   });
 });

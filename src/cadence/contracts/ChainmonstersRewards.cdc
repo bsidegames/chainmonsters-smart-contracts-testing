@@ -21,6 +21,7 @@ pub contract ChainmonstersRewards: NonFungibleToken {
     // Variable size dictionary of Reward structs
     access(self) var rewardDatas: {UInt32: Reward}
     access(self) var rewardSupplies: {UInt32: UInt32}
+    access(self) var rewardSeasons: {UInt32 : UInt32}
 
     // a mapping of Reward IDs that indicates what serial/mint number
     // have been minted for this specific Reward yet
@@ -239,13 +240,20 @@ pub contract ChainmonstersRewards: NonFungibleToken {
         
         // creates a new Reward struct and stores it in the Rewards dictionary
         // Parameters: metadata: the name of the reward
-        pub fun createReward(metadata: String, supplyCap: UInt32): UInt32 {
+        pub fun createReward(metadata: String, totalSupply: UInt32): UInt32 {
             // Create the new Reward
             var newReward = Reward(metadata: metadata)
             let newID = newReward.rewardID;
 
-            ChainmonstersRewards.rewardSupplies[newID] = supplyCap
+            // Kickstarter rewards are created with a fixed total supply.
+            // Future season rewards are not technically limited by a total supply
+            // but rather the time limitations in which a player can earn those.
+            // Once a season is over the total supply for those rewards is fixed since
+            // they can no longer be minted.
+
+            ChainmonstersRewards.rewardSupplies[newID] = totalSupply
             ChainmonstersRewards.numberMintedPerReward[newID] = 0
+            ChainmonstersRewards.rewardSeasons[newID] = newReward.season
 
             ChainmonstersRewards.rewardDatas[newID] = newReward
 
@@ -257,8 +265,12 @@ pub contract ChainmonstersRewards: NonFungibleToken {
 		// 
 		pub fun mintReward(rewardID: UInt32): @NFT {
             pre {
-              // check if total supply allows additional NFTs
-              ChainmonstersRewards.numberMintedPerReward[rewardID] != ChainmonstersRewards.rewardSupplies[rewardID]
+
+                // check if the reward is still in "season"
+                ChainmonstersRewards.rewardSeasons[rewardID] == ChainmonstersRewards.currentSeason
+                // check if total supply allows additional NFTs || ignore if there is no hard cap specified == 0
+                ChainmonstersRewards.numberMintedPerReward[rewardID] != ChainmonstersRewards.rewardSupplies[rewardID] || ChainmonstersRewards.rewardSupplies[rewardID] == UInt32(0)
+
             }
 
             // Gets the number of NFTs that have been minted for this Reward
@@ -285,6 +297,9 @@ pub contract ChainmonstersRewards: NonFungibleToken {
             return &ChainmonstersRewards.rewardDatas[rewardID] as &Reward
         }
 
+
+        // ends the current season by incrementing the season number
+        // Rewards minted after this will use the new season number.
         pub fun startNewSeason(): UInt32 {
             ChainmonstersRewards.currentSeason = ChainmonstersRewards.currentSeason + UInt32(1)
 
@@ -365,7 +380,8 @@ pub contract ChainmonstersRewards: NonFungibleToken {
         self.totalSupply = 0
         self.rewardSupplies = {}
         self.numberMintedPerReward = {}
-        self.currentSeason = 0;
+        self.currentSeason = 0
+        self.rewardSeasons = {}
 
          // Put a new Collection in storage
         self.account.save<@Collection>(<- create Collection(), to: /storage/RewardCollection)
