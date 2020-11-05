@@ -287,7 +287,7 @@ pub contract ChainmonstersRewards: NonFungibleToken {
             return <-newReward
 		}
 
-        // batchMintMoment mints an arbitrary quantity of Rewards 
+        // batchMintReward mints an arbitrary quantity of Rewards 
         // 
         pub fun batchMintReward(rewardID: UInt32, quantity: UInt64): @Collection {
             let newCollection <- create Collection()
