@@ -74,4 +74,109 @@ describe("deploy chainmonsters rewards contract", () => {
     expect(txResult.errorMessage).toBe("");
     expect(txResult.events.length).toBe(1);
   });
+
+  test("setup account for nftReceiver", async () => {
+    const nftReceiver = await getAccountAddress("nftReceiver");
+
+    const ChainmonstersRewards = await getContractAddress(
+      "ChainmonstersRewards"
+    );
+
+    const code = await getTransactionCode({
+      name: "/user/setup_account",
+      addressMap: { ChainmonstersRewards },
+    });
+
+    const signers = [nftReceiver];
+
+    let txResult;
+    try {
+      txResult = await sendTransaction({
+        code,
+        signers,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
+    console.log({ txResult });
+    expect(txResult.errorMessage).toBe("");
+    //expect(txResult.events.length).toBe(1);
+  });
+
+  test("mint Alpha Access once", async () => {
+    const admin = await getAccountAddress("admin");
+
+    const nftReceiver = await getAccountAddress("nftReceiver");
+
+    const ChainmonstersRewards = await getContractAddress(
+      "ChainmonstersRewards"
+    );
+
+    const code = await getTransactionCode({
+      name: "/admin/mint_nft",
+      addressMap: { ChainmonstersRewards },
+    });
+
+    //mint 100 NFTs based of Alpha Access (ID 1)
+    const args = [
+      [1, types.UInt32],
+      [nftReceiver, types.Address],
+    ];
+
+    const signers = [admin];
+
+    let txResult;
+    try {
+      txResult = await sendTransaction({
+        code,
+        args,
+        signers,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
+    console.log({ txResult });
+    expect(txResult.errorMessage).toBe("");
+    //expect(txResult.events.length).toBe(1);
+  });
+  test("batch mint Alpha Access", async () => {
+    const admin = await getAccountAddress("admin");
+
+    const nftReceiver = await getAccountAddress("nftReceiver");
+
+    const ChainmonstersRewards = await getContractAddress(
+      "ChainmonstersRewards"
+    );
+
+    const code = await getTransactionCode({
+      name: "/admin/batch_mint_reward",
+      addressMap: { ChainmonstersRewards },
+    });
+
+    //mint 100 NFTs based of Alpha Access (ID 1)
+    const args = [
+      [1, types.UInt32],
+      [10, types.UInt64],
+      [nftReceiver, types.Address],
+    ];
+
+    const signers = [admin];
+
+    let txResult;
+    try {
+      txResult = await sendTransaction({
+        code,
+        args,
+        signers,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
+    console.log({ txResult });
+    expect(txResult.errorMessage).toBe("");
+    //expect(txResult.events.length).toBe(1);
+  });
 });
