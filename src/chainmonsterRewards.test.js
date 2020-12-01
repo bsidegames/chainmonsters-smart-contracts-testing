@@ -158,7 +158,7 @@ describe("deploy chainmonsters rewards contract", () => {
     //mint 100 NFTs based of Alpha Access (ID 1)
     const args = [
       [1, types.UInt32],
-      [10, types.UInt64],
+      [100, types.UInt64],
       [nftReceiver, types.Address],
     ];
 
